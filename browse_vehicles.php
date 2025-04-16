@@ -13,6 +13,15 @@ $vehicles = $pdo->query("SELECT * FROM vehicles WHERE availability = 1")->fetchA
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Browse Vehicles</title>
+    <style>
+        header {
+            width: 100%;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 10;
+        }
+    </style>
 </head>
 <body>
     <h1>Browse Vehicles</h1>
