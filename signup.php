@@ -63,6 +63,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <h1 class="text-lg font-bold">CARNEX Sign Up</h1>
             <nav>
                 <ul class="flex space-x-4">
+                    <li><a href="index.php" class="hover:underline">Home</a></li>
+                    <li><a href="blog.php" class="hover:underline">Blog</a></li>
                     <li><a href="login.php" class="hover:underline">Login</a></li>
                     <li><a href="browse_vehicles.php" class="hover:underline">Browse Vehicles</a></li>
                 </ul>
