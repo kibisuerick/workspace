@@ -22,7 +22,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'email' => $email,
             'phone' => $phone
         ]);
-        $success = "User registered successfully. You can now log in.";
+        $success = "User registered successfully.";
+
+        // Automatically log in the user
+        session_start();
+        $_SESSION['user'] = [
+            'username' => $username,
+            'role' => $role,
+            'full_name' => $fullName
+        ];
+
+        // Redirect to the appropriate dashboard
+        if ($role === 'customer') {
+            header('Location: customer_dashboard.php');
+        } elseif ($role === 'employee') {
+            header('Location: employee_dashboard.php');
+        } elseif ($role === 'admin') {
+            header('Location: admin_dashboard.php');
+        }
+
+        // Redirect to the same page to prevent form resubmission
+        header('Location: signup.php');
+        exit;
     } catch (PDOException $e) {
         $error = "Error: " . $e->getMessage();
     }
@@ -61,22 +82,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             display: block;
         }
 
-        /* Ensure the dropdown stays open when hovering over it */
-        .group:hover .group-hover\:block,
-        .group-hover\:block:hover {
-            display: block;
-        }
-
-        /* Fix positioning issues and prevent gaps */
+        /* Ensure dropdown visibility */
         .dropdown-menu {
             position: absolute;
-            top: 100%; /* Align directly below the parent */
+            top: 100%;
             left: 0;
             z-index: 50;
             background-color: white;
             border: 1px solid #e5e7eb;
             border-radius: 0.375rem;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            min-width: 12rem;
         }
 
         .dropdown-menu li a {
@@ -102,7 +118,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <li><a href="blog.php" class="hover:underline">Blog</a></li>
                     <li class="relative group">
                         <a href="#" class="hover:underline flex items-center">Pages <svg class="w-4 h-4 ml-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg></a>
-                        <ul class="absolute hidden group-hover:block bg-white shadow-md mt-2 space-y-2 py-2 w-48 dropdown-menu">
+                        <ul class="absolute hidden group-hover:block bg-white shadow-md mt-2 space-y-2 py-2 w-48">
                             <li><a href="team.php" class="block px-4 py-2 hover:bg-gray-100">Team</a></li>
                             <li><a href="pricing.php" class="block px-4 py-2 hover:bg-gray-100">Pricing</a></li>
                             <li><a href="faq.php" class="block px-4 py-2 hover:bg-gray-100">FAQ</a></li>
