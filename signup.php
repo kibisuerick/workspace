@@ -35,46 +35,81 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sign Up</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        body > *:not(footer) {
+            flex: 1;
+        }
+    </style>
 </head>
-<body>
-    <h1>Sign Up</h1>
-    <?php if (isset($success)): ?>
-        <p style="color: green;"> <?= $success ?> </p>
-    <?php elseif (isset($error)): ?>
-        <p style="color: red;"> <?= $error ?> </p>
-    <?php endif; ?>
-    <p>Welcome! Please fill out the form below to create your account. Choose your role and ensure your password meets the requirements for security.</p>
-    <form method="POST" action="">
-        <label for="username">Username:</label>
-        <input type="text" id="username" name="username" required><br>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+    <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-md my-10">
+        <h1 class="text-2xl font-bold text-center mb-6">Sign Up</h1>
+        <p class="text-center text-gray-600 mb-4">Welcome! Please fill out the form below to create your account.</p>
+        <?php if (isset($success)): ?>
+            <p class="text-green-500 text-center mb-4"> <?= $success ?> </p>
+        <?php elseif (isset($error)): ?>
+            <p class="text-red-500 text-center mb-4"> <?= $error ?> </p>
+        <?php endif; ?>
+        <form method="POST" action="" class="space-y-4">
+            <div>
+                <label for="username" class="block text-gray-700 text-sm font-bold mb-2">Username:</label>
+                <input type="text" id="username" name="username" required class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+            </div>
 
-        <label for="password">Password:</label>
-        <input type="password" id="password" name="password" required>
-        <button type="button" id="togglePassword">Show</button><br>
+            <div>
+                <label for="password" class="block text-gray-700 text-sm font-bold mb-2">Password:</label>
+                <div class="relative">
+                    <input type="password" id="password" name="password" required class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                    <button type="button" id="togglePassword" class="absolute inset-y-0 right-0 px-3 text-gray-500">Show</button>
+                </div>
+            </div>
 
-        <label for="confirm_password">Confirm Password:</label>
-        <input type="password" id="confirm_password" name="confirm_password" required>
-        <button type="button" id="toggleConfirmPassword">Show</button><br>
+            <div>
+                <label for="confirm_password" class="block text-gray-700 text-sm font-bold mb-2">Confirm Password:</label>
+                <div class="relative">
+                    <input type="password" id="confirm_password" name="confirm_password" required class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                    <button type="button" id="toggleConfirmPassword" class="absolute inset-y-0 right-0 px-3 text-gray-500">Show</button>
+                </div>
+            </div>
 
-        <label for="full_name">Full Name:</label>
-        <input type="text" id="full_name" name="full_name" required><br>
+            <div>
+                <label for="full_name" class="block text-gray-700 text-sm font-bold mb-2">Full Name:</label>
+                <input type="text" id="full_name" name="full_name" required class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+            </div>
 
-        <label for="email">Email Address:</label>
-        <input type="email" id="email" name="email" required><br>
+            <div>
+                <label for="email" class="block text-gray-700 text-sm font-bold mb-2">Email Address:</label>
+                <input type="email" id="email" name="email" required class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+            </div>
 
-        <label for="phone">Phone Number:</label>
-        <input type="tel" id="phone" name="phone" required><br>
+            <div>
+                <label for="phone" class="block text-gray-700 text-sm font-bold mb-2">Phone Number:</label>
+                <input type="tel" id="phone" name="phone" required class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+            </div>
 
-        <label for="role">Role:</label>
-        <select id="role" name="role" required>
-            <option value="customer">Customer</option>
-            <option value="employee">Employee</option>
-            <option value="admin">Admin</option>
-        </select><br>
+            <div>
+                <label for="role" class="block text-gray-700 text-sm font-bold mb-2">Role:</label>
+                <select id="role" name="role" required class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                    <option value="customer">Customer</option>
+                    <option value="employee">Employee</option>
+                    <option value="admin">Admin</option>
+                </select>
+            </div>
 
-        <button type="submit">Sign Up</button>
-    </form>
-    <p>Already have an account? <a href="login.php">Log In</a></p>
+            <div>
+                <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full">Sign Up</button>
+            </div>
+        </form>
+        <p class="text-center text-gray-600 mt-4">Already have an account? <a href="login.php" class="text-blue-500 hover:underline">Log In</a></p>
+    </div>
 
     <script>
         document.querySelector('form').addEventListener('submit', function(event) {
@@ -110,5 +145,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             this.textContent = type === 'password' ? 'Show' : 'Hide';
         });
     </script>
+
+    <footer class="bg-gray-800 text-white py-4 mt-auto w-full">
+        <div class="container mx-auto text-center">
+            <p class="text-sm">&copy; 2025 CARNEX. All rights reserved.</p>
+            <p class="text-sm">Designed and developed by CARNEX</p>
+        </div>
+    </footer>
 </body>
 </html>
