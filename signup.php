@@ -35,10 +35,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Redirect to the appropriate dashboard
         if ($role === 'customer') {
             header('Location: customer_dashboard.php');
+            exit;
         } elseif ($role === 'employee') {
             header('Location: employee_dashboard.php');
+            exit;
         } elseif ($role === 'admin') {
             header('Location: admin_dashboard.php');
+            exit;
         }
 
         // Redirect to the same page to prevent form resubmission
