@@ -55,6 +55,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             left: 0;
             z-index: 10;
         }
+
+        /* Ensure the dropdown is visible on hover */
+        .group:hover .group-hover\:block {
+            display: block;
+        }
+
+        /* Ensure the dropdown stays open when hovering over it */
+        .group:hover .group-hover\:block,
+        .group-hover\:block:hover {
+            display: block;
+        }
+
+        /* Fix positioning issues and prevent gaps */
+        .dropdown-menu {
+            position: absolute;
+            top: 100%; /* Align directly below the parent */
+            left: 0;
+            z-index: 50;
+            background-color: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.375rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .dropdown-menu li a {
+            color: #374151;
+            text-decoration: none;
+            display: block;
+            padding: 0.5rem 1rem;
+        }
+
+        .dropdown-menu li a:hover {
+            background-color: #f3f4f6;
+            color: #1f2937;
+        }
     </style>
 </head>
 <body class="bg-gray-100 flex flex-col items-center justify-start" style="padding-top: 5rem; min-height: 100vh;">
@@ -65,6 +100,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <ul class="flex space-x-4">
                     <li><a href="index.php" class="hover:underline">Home</a></li>
                     <li><a href="blog.php" class="hover:underline">Blog</a></li>
+                    <li class="relative group">
+                        <a href="#" class="hover:underline flex items-center">Pages <svg class="w-4 h-4 ml-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg></a>
+                        <ul class="absolute hidden group-hover:block bg-white shadow-md mt-2 space-y-2 py-2 w-48 dropdown-menu">
+                            <li><a href="team.php" class="block px-4 py-2 hover:bg-gray-100">Team</a></li>
+                            <li><a href="pricing.php" class="block px-4 py-2 hover:bg-gray-100">Pricing</a></li>
+                            <li><a href="faq.php" class="block px-4 py-2 hover:bg-gray-100">FAQ</a></li>
+                            <li><a href="testimonials.php" class="block px-4 py-2 hover:bg-gray-100">Testimonials</a></li>
+                            <li><a href="404.php" class="block px-4 py-2 hover:bg-gray-100">404 Page</a></li>
+                        </ul>
+                    </li>
                     <li><a href="login.php" class="hover:underline">Login</a></li>
                     <li><a href="browse_vehicles.php" class="hover:underline">Browse Vehicles</a></li>
                 </ul>
@@ -165,6 +210,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             const type = confirmPasswordField.type === 'password' ? 'text' : 'password';
             confirmPasswordField.type = type;
             this.textContent = type === 'password' ? 'Show' : 'Hide';
+        });
+
+        // Ensure the dropdown remains stable when clicked
+        document.querySelectorAll('.group > a').forEach(function (dropdownToggle) {
+            dropdownToggle.addEventListener('click', function (event) {
+                event.preventDefault(); // Prevent default link behavior
+                const dropdownMenu = this.nextElementSibling;
+                if (dropdownMenu) {
+                    const isVisible = dropdownMenu.style.display === 'block';
+                    dropdownMenu.style.display = isVisible ? 'none' : 'block';
+                }
+            });
+        });
+
+        // Close dropdown if clicked outside
+        document.addEventListener('click', function (event) {
+            const isClickInside = event.target.closest('.group');
+            if (!isClickInside) {
+                document.querySelectorAll('.dropdown-menu').forEach(function (dropdownMenu) {
+                    dropdownMenu.style.display = 'none';
+                });
+            }
         });
     </script>
 
