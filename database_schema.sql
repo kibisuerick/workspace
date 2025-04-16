@@ -44,7 +44,8 @@ CREATE TABLE bookings (
 -- Table: roles (optional for extensibility)
 CREATE TABLE roles (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(50) NOT NULL UNIQUE
+    name VARCHAR(50) NOT NULL UNIQUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Insert default roles
@@ -80,4 +81,14 @@ CREATE TABLE payments (
     amount_paid DECIMAL(10, 2) NOT NULL,
     paid_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (booking_id) REFERENCES bookings(booking_id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+-- Table: reports
+CREATE TABLE reports (
+    report_id INT AUTO_INCREMENT PRIMARY KEY,
+    report_name VARCHAR(100) NOT NULL,
+    generated_by INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    report_data TEXT NOT NULL,
+    FOREIGN KEY (generated_by) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;

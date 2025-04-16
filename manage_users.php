@@ -5,7 +5,7 @@ require 'includes/auth.php';
 checkAuth('admin');
 
 // Fetch users from the database
-$users = $pdo->query("SELECT id, full_name, email, role, created_at FROM users")->fetchAll(PDO::FETCH_ASSOC);
+$users = $pdo->query("SELECT id, full_name, email, role, status, created_at FROM users")->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
 <!DOCTYPE html>
@@ -20,20 +20,27 @@ $users = $pdo->query("SELECT id, full_name, email, role, created_at FROM users")
         body {
             font-family: 'Inter', sans-serif;
         }
+        .fab {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 50;
+        }
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen">
     <!-- Header -->
     <header class="bg-white shadow-md py-4 px-6 flex justify-between items-center">
         <h1 class="text-xl font-bold text-gray-800">Manage Users</h1>
-        <nav>
-            <ol class="flex space-x-2 text-gray-600">
-                <li><a href="admin_dashboard.php" class="hover:underline">Dashboard</a></li>
-                <li>/</li>
-                <li>Users</li>
-            </ol>
-        </nav>
+        <button class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">+ Add User</button>
     </header>
+
+    <!-- Breadcrumbs -->
+    <nav class="text-sm text-gray-500 mt-5 px-6">
+        <a href="index.php" class="hover:text-blue-600">Home</a> >
+        <a href="admin_dashboard.php" class="hover:text-blue-600">Dashboard</a> >
+        <span class="font-semibold text-gray-800">Manage Users</span>
+    </nav>
 
     <!-- Main Content -->
     <main class="p-6 space-y-6">
@@ -63,27 +70,35 @@ $users = $pdo->query("SELECT id, full_name, email, role, created_at FROM users")
                             <th class="border-b py-2 px-4">Full Name</th>
                             <th class="border-b py-2 px-4">Email</th>
                             <th class="border-b py-2 px-4">Role</th>
+                            <th class="border-b py-2 px-4">Status</th>
                             <th class="border-b py-2 px-4">Created At</th>
                             <th class="border-b py-2 px-4">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php foreach ($users as $user): ?>
-                            <tr class="hover:bg-gray-100">
-                                <td class="border-b py-2 px-4"><?= $user['id'] ?></td>
-                                <td class="border-b py-2 px-4"><?= htmlspecialchars($user['full_name']) ?></td>
-                                <td class="border-b py-2 px-4"><?= htmlspecialchars($user['email']) ?></td>
+                            <tr class="hover:bg-gray-50">
                                 <td class="border-b py-2 px-4">
-                                    <select class="border rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                        <option value="admin" <?= $user['role'] === 'admin' ? 'selected' : '' ?>>Admin</option>
-                                        <option value="employee" <?= $user['role'] === 'employee' ? 'selected' : '' ?>>Employee</option>
-                                        <option value="customer" <?= $user['role'] === 'customer' ? 'selected' : '' ?>>Customer</option>
-                                    </select>
+                                    <input type="checkbox" class="mr-2">
+                                    <?= $user['id'] ?>
                                 </td>
-                                <td class="border-b py-2 px-4"><?= $user['created_at'] ?></td>
+                                <td class="border-b py-2 px-4"> <?= htmlspecialchars($user['full_name']) ?> </td>
+                                <td class="border-b py-2 px-4"> <?= htmlspecialchars($user['email']) ?> </td>
                                 <td class="border-b py-2 px-4">
-                                    <button class="bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600">Edit</button>
-                                    <button class="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600" onclick="confirmDelete(<?= $user['id'] ?>)">Delete</button>
+                                    <span class="px-2 py-1 rounded text-white <?= $user['role'] === 'admin' ? 'bg-blue-500' : ($user['role'] === 'employee' ? 'bg-green-500' : 'bg-yellow-500') ?>">
+                                        <?= ucfirst($user['role']) ?>
+                                    </span>
+                                </td>
+                                <td class="border-b py-2 px-4">
+                                    <span class="flex items-center">
+                                        <span class="w-2 h-2 rounded-full mr-2 <?= $user['status'] === 'active' ? 'bg-green-500' : 'bg-red-500' ?>"></span>
+                                        <?= ucfirst($user['status']) ?>
+                                    </span>
+                                </td>
+                                <td class="border-b py-2 px-4"> <?= $user['created_at'] ?> </td>
+                                <td class="border-b py-2 px-4">
+                                    <button class="text-blue-500 hover:underline">✏️ Edit</button>
+                                    <button class="text-red-500 hover:underline" onclick="confirmDelete(<?= $user['id'] ?>)">🗑️ Delete</button>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
@@ -93,11 +108,19 @@ $users = $pdo->query("SELECT id, full_name, email, role, created_at FROM users")
         </div>
 
         <!-- Pagination -->
-        <div class="flex justify-center">
-            <button class="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400">Previous</button>
-            <button class="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 ml-2">Next</button>
+        <div class="flex justify-between items-center">
+            <p>Showing 1-10 of 50</p>
+            <div class="flex space-x-2">
+                <button class="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400">Previous</button>
+                <button class="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400">Next</button>
+            </div>
         </div>
     </main>
+
+    <!-- Floating Dashboard Button -->
+    <button class="fab bg-blue-100 hover:bg-blue-200 px-3 py-1 rounded-lg" onclick="location.href='admin_dashboard.php'" aria-label="Return to dashboard">
+        🏠 Dashboard
+    </button>
 
     <!-- Delete Confirmation Modal -->
     <div id="deleteModal" class="hidden fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center">
