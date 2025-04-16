@@ -38,8 +38,8 @@ checkAuth('employee');
                 <li><a href="manage_bookings.php" class="block py-2 px-4 hover:bg-gray-700">Bookings</a></li>
                 <li><a href="manage_vehicles.php" class="block py-2 px-4 hover:bg-gray-700">Vehicles</a></li>
                 <li><a href="manage_users.php" class="block py-2 px-4 hover:bg-gray-700">Customers</a></li>
-                <li><a href="#" class="block py-2 px-4 hover:bg-gray-700">Reports</a></li>
-                <li><a href="#" class="block py-2 px-4 hover:bg-gray-700">Profile</a></li>
+                <li><a href="employee_reports.php" class="block py-2 px-4 hover:bg-gray-700">Reports</a></li>
+                <li><a href="employee_profile.php" class="block py-2 px-4 hover:bg-gray-700">Profile</a></li>
                 <li><a href="logout.php" class="block py-2 px-4 hover:bg-gray-700">Logout</a></li>
             </ul>
         </nav>
