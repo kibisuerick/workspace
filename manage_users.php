@@ -4,6 +4,51 @@ require 'includes/auth.php';
 
 checkAuth('admin');
 
+// Handle POST requests for user actions
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Decode JSON input
+    $input = json_decode(file_get_contents('php://input'), true);
+
+    if (isset($input['action'])) {
+        $action = $input['action'];
+
+        if ($action === 'delete' && isset($input['user_id'])) {
+            $userId = (int)$input['user_id'];
+
+            // Delete user from the database
+            $stmt = $pdo->prepare("DELETE FROM users WHERE id = :id");
+            $stmt->execute(['id' => $userId]);
+
+            echo json_encode(['success' => true, 'message' => 'User deleted successfully.']);
+            exit;
+        }
+
+        if ($action === 'edit' && isset($input['user_id'], $input['full_name'], $input['email'], $input['role'], $input['status'])) {
+            $userId = (int)$input['user_id'];
+            $fullName = $input['full_name'];
+            $email = $input['email'];
+            $role = $input['role'];
+            $status = $input['status'];
+
+            // Update user details in the database
+            $stmt = $pdo->prepare("UPDATE users SET full_name = :full_name, email = :email, role = :role, status = :status WHERE id = :id");
+            $stmt->execute([
+                'full_name' => $fullName,
+                'email' => $email,
+                'role' => $role,
+                'status' => $status,
+                'id' => $userId
+            ]);
+
+            echo json_encode(['success' => true, 'message' => 'User updated successfully.']);
+            exit;
+        }
+    }
+
+    echo json_encode(['success' => false, 'message' => 'Invalid request.']);
+    exit;
+}
+
 // Fetch users from the database
 $users = $pdo->query("SELECT id, full_name, email, role, status, created_at FROM users")->fetchAll(PDO::FETCH_ASSOC);
 ?>
@@ -97,7 +142,7 @@ $users = $pdo->query("SELECT id, full_name, email, role, status, created_at FROM
                                 </td>
                                 <td class="border-b py-2 px-4"> <?= $user['created_at'] ?> </td>
                                 <td class="border-b py-2 px-4">
-                                    <button class="text-blue-500 hover:underline">✏️ Edit</button>
+                                    <button class="text-blue-500 hover:underline" onclick="editUser(<?= $user['id'] ?>)">✏️ Edit</button>
                                     <button class="text-red-500 hover:underline" onclick="confirmDelete(<?= $user['id'] ?>)">🗑️ Delete</button>
                                 </td>
                             </tr>
@@ -174,8 +219,61 @@ $users = $pdo->query("SELECT id, full_name, email, role, status, created_at FROM
         }
 
         function confirmDelete(userId) {
-            toggleModal('deleteModal');
-            // Add logic to handle deletion
+            if (confirm('Are you sure you want to delete this user?')) {
+                fetch('manage_users.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ action: 'delete', user_id: userId }),
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert(data.message);
+                            location.reload();
+                        } else {
+                            alert('Error: ' + data.message);
+                        }
+                    })
+                    .catch(error => console.error('Error:', error));
+            }
+        }
+
+        function editUser(userId) {
+            const fullName = prompt('Enter new full name:');
+            const email = prompt('Enter new email:');
+            const role = prompt('Enter new role (admin, employee, customer):');
+            const status = prompt('Enter new status (active, inactive):');
+
+            if (fullName && email && role && status) {
+                fetch('manage_users.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'edit',
+                        user_id: userId,
+                        full_name: fullName,
+                        email: email,
+                        role: role,
+                        status: status,
+                    }),
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert(data.message);
+                            location.reload();
+                        } else {
+                            alert('Error: ' + data.message);
+                        }
+                    })
+                    .catch(error => console.error('Error:', error));
+            } else {
+                alert('All fields are required to edit the user.');
+            }
         }
     </script>
 
@@ -215,7 +313,7 @@ $users = $pdo->query("SELECT id, full_name, email, role, status, created_at FROM
                                 </td>
                                 <td class="border-b py-2 px-4">${user.created_at}</td>
                                 <td class="border-b py-2 px-4">
-                                    <button class="text-blue-500 hover:underline">✏️ Edit</button>
+                                    <button class="text-blue-500 hover:underline" onclick="editUser(${user.id})">✏️ Edit</button>
                                     <button class="text-red-500 hover:underline" onclick="confirmDelete(${user.id})">🗑️ Delete</button>
                                 </td>
                             </tr>
