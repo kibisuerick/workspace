@@ -71,6 +71,77 @@ $users = $pdo->query("SELECT id, full_name, email, role, status, created_at FROM
             right: 20px;
             z-index: 50;
         }
+
+        /* Improved table styling */
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 12px;
+        }
+
+        th {
+            background-color: #f4f4f4;
+            color: #333;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        tr:hover {
+            background-color: #f1f1f1;
+            cursor: pointer;
+        }
+
+        /* Button hover effects */
+        button {
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+
+        button:hover {
+            transform: scale(1.05);
+        }
+
+        /* Modal animations */
+        .modal {
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        .modal.hidden {
+            opacity: 0;
+            transform: scale(0.95);
+        }
+
+        .modal.visible {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        /* Dark mode toggle */
+        .dark-mode {
+            background-color: #1a202c;
+            color: #cbd5e0;
+        }
+
+        .dark-mode table {
+            background-color: #2d3748;
+        }
+
+        .dark-mode th {
+            background-color: #4a5568;
+        }
+
+        .dark-mode tr:nth-child(even) {
+            background-color: #2d3748;
+        }
+
+        .dark-mode tr:hover {
+            background-color: #4a5568;
+        }
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen">
@@ -218,8 +289,33 @@ $users = $pdo->query("SELECT id, full_name, email, role, status, created_at FROM
             modal.classList.toggle('hidden');
         }
 
+        // Add loading spinner for actions
+        function showLoadingSpinner() {
+            const spinner = document.createElement('div');
+            spinner.id = 'loadingSpinner';
+            spinner.style.position = 'fixed';
+            spinner.style.top = '50%';
+            spinner.style.left = '50%';
+            spinner.style.transform = 'translate(-50%, -50%)';
+            spinner.style.border = '4px solid #f3f3f3';
+            spinner.style.borderTop = '4px solid #3498db';
+            spinner.style.borderRadius = '50%';
+            spinner.style.width = '40px';
+            spinner.style.height = '40px';
+            spinner.style.animation = 'spin 1s linear infinite';
+            document.body.appendChild(spinner);
+        }
+
+        function hideLoadingSpinner() {
+            const spinner = document.getElementById('loadingSpinner');
+            if (spinner) {
+                spinner.remove();
+            }
+        }
+
         function confirmDelete(userId) {
             if (confirm('Are you sure you want to delete this user?')) {
+                showLoadingSpinner();
                 fetch('manage_users.php', {
                     method: 'POST',
                     headers: {
@@ -229,6 +325,7 @@ $users = $pdo->query("SELECT id, full_name, email, role, status, created_at FROM
                 })
                     .then(response => response.json())
                     .then(data => {
+                        hideLoadingSpinner();
                         if (data.success) {
                             alert(data.message);
                             location.reload();
@@ -236,7 +333,10 @@ $users = $pdo->query("SELECT id, full_name, email, role, status, created_at FROM
                             alert('Error: ' + data.message);
                         }
                     })
-                    .catch(error => console.error('Error:', error));
+                    .catch(error => {
+                        hideLoadingSpinner();
+                        console.error('Error:', error);
+                    });
             }
         }
 
@@ -247,6 +347,7 @@ $users = $pdo->query("SELECT id, full_name, email, role, status, created_at FROM
             const status = prompt('Enter new status (active, inactive):');
 
             if (fullName && email && role && status) {
+                showLoadingSpinner();
                 fetch('manage_users.php', {
                     method: 'POST',
                     headers: {
@@ -263,6 +364,7 @@ $users = $pdo->query("SELECT id, full_name, email, role, status, created_at FROM
                 })
                     .then(response => response.json())
                     .then(data => {
+                        hideLoadingSpinner();
                         if (data.success) {
                             alert(data.message);
                             location.reload();
@@ -270,14 +372,40 @@ $users = $pdo->query("SELECT id, full_name, email, role, status, created_at FROM
                             alert('Error: ' + data.message);
                         }
                     })
-                    .catch(error => console.error('Error:', error));
+                    .catch(error => {
+                        hideLoadingSpinner();
+                        console.error('Error:', error);
+                    });
             } else {
                 alert('All fields are required to edit the user.');
             }
         }
-    </script>
 
-    <script>
+        // Dark mode toggle functionality
+        document.addEventListener('DOMContentLoaded', function () {
+            const darkModeToggle = document.createElement('button');
+            darkModeToggle.textContent = 'Toggle Dark Mode';
+            darkModeToggle.className = 'bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600';
+            darkModeToggle.style.position = 'fixed';
+            darkModeToggle.style.bottom = '20px';
+            darkModeToggle.style.left = '20px';
+            document.body.appendChild(darkModeToggle);
+
+            darkModeToggle.addEventListener('click', function () {
+                document.body.classList.toggle('dark-mode');
+            });
+        });
+
+        // Spinner animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+        `;
+        document.head.appendChild(style);
+
         document.addEventListener('DOMContentLoaded', function () {
             const userTableBody = document.getElementById('userTableBody');
             const paginationContainer = document.getElementById('paginationContainer');

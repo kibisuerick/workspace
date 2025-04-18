@@ -82,7 +82,7 @@ checkAuth('admin');
                     <h3 class="text-lg font-bold">Total Vehicles</h3>
                     <p class="text-2xl" id="totalVehicles">123</p>
                     <div class="mt-2">
-                        <button class="bg-blue-500 text-white px-4 py-2 rounded">Add Vehicle</button>
+                        <button class="bg-blue-500 text-white px-4 py-2 rounded" onclick="location.href='manage_vehicles.php'">Add Vehicle</button>
                     </div>
                 </div>
                 <div class="bg-white p-4 shadow rounded cursor-pointer">
