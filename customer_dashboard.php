@@ -4,35 +4,64 @@ require 'includes/auth.php';
 
 checkAuth('customer');
 
-// Add dynamic greeting and quick stats
+if (!isset($_SESSION['user']['id'])) {
+    // Debugging: Log session data to a file for troubleshooting
+    file_put_contents('debug_session.log', print_r($_SESSION, true));
+
+    // Redirect to login page
+    header('Location: login.php');
+    exit();
+}
+
+$userId = $_SESSION['user']['id'];
+
+// Fetch dynamic data from the database
 $greeting = "Welcome back, " . htmlspecialchars($_SESSION['user']['full_name']) . "!";
-$loyaltyPoints = 120; // Example value
-$rentalStats = [
-    'upcoming' => 2,
-    'active' => 1,
-    'completed' => 15,
-];
 
-// Example upcoming reservations
-$upcomingReservations = [
-    [
-        'car_model' => 'Toyota Corolla',
-        'pickup_date' => '2025-04-20',
-        'pickup_location' => 'Downtown Office',
-        'status' => 'Confirmed',
-    ],
-    [
-        'car_model' => 'Honda Civic',
-        'pickup_date' => '2025-04-25',
-        'pickup_location' => 'Airport Terminal',
-        'status' => 'Pending',
-    ],
-];
+// Fetch loyalty points
+try {
+    $loyaltyPoints = $pdo->query("SELECT loyalty_points FROM users WHERE id = $userId")->fetchColumn();
+} catch (PDOException $e) {
+    die('Database error: ' . $e->getMessage());
+}
 
-$activeRental = [
-    'car_model' => 'Ford Focus',
-    'return_time' => '2025-04-22 10:00 AM',
-];
+// Fetch rental stats
+try {
+    $rentalStats = $pdo->query(
+        "SELECT 
+            (SELECT COUNT(*) FROM bookings WHERE user_id = $userId AND booking_status = 'upcoming') AS upcoming,
+            (SELECT COUNT(*) FROM bookings WHERE user_id = $userId AND booking_status = 'active') AS active,
+            (SELECT COUNT(*) FROM bookings WHERE user_id = $userId AND booking_status = 'completed') AS completed"
+    )->fetch(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    die('Database error: ' . $e->getMessage());
+}
+
+// Fetch upcoming reservations
+try {
+    $upcomingReservations = $pdo->query(
+        "SELECT cars.model AS car_model, bookings.pickup_date, locations.name AS pickup_location, bookings.booking_status 
+        FROM bookings 
+        JOIN cars ON bookings.car_id = cars.car_id 
+        JOIN locations ON bookings.pickup_location_id = locations.location_id 
+        WHERE bookings.user_id = $userId AND bookings.booking_status = 'upcoming'"
+    )->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    die('Database error: ' . $e->getMessage());
+}
+
+// Fetch active rental
+try {
+    $activeRental = $pdo->query(
+        "SELECT cars.model AS car_model, bookings.return_date, locations.name AS pickup_location 
+        FROM bookings 
+        JOIN cars ON bookings.car_id = cars.car_id 
+        JOIN locations ON bookings.pickup_location_id = locations.location_id 
+        WHERE bookings.user_id = $userId AND bookings.booking_status = 'active' LIMIT 1"
+    )->fetch(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    die('Database error: ' . $e->getMessage());
+}
 ?>
 
 <!DOCTYPE html>
@@ -42,6 +71,7 @@ $activeRental = [
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Customer Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs" defer></script>
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -79,7 +109,7 @@ $activeRental = [
         <div class="flex items-center justify-between p-4 border-b border-gray-700">
             <div class="flex items-center space-x-2">
                 <img src="https://via.placeholder.com/40" alt="Avatar" class="rounded-full w-10 h-10">
-                <span id="customerName" class="text-lg font-bold md:hidden">John Doe</span>
+                <span id="customerName" class="text-lg font-bold md:hidden"><?= htmlspecialchars($_SESSION['user']['full_name']) ?></span>
             </div>
             <button id="collapseButton" class="text-gray-400 hover:text-white md:hidden">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="w-6 h-6">
@@ -106,7 +136,7 @@ $activeRental = [
                     <span class="ml-auto">▶️</span>
                 </button>
                 <div class="hidden group-hover:block bg-gray-700 rounded mt-1">
-                    <a href="#" class="block px-4 py-2 hover:bg-gray-600">Upcoming (3)</a>
+                    <a href="#" class="block px-4 py-2 hover:bg-gray-600">Upcoming (<?= $rentalStats['upcoming'] ?>)</a>
                     <a href="#" class="block px-4 py-2 hover:bg-gray-600">Past</a>
                     <a href="#" class="block px-4 py-2 hover:bg-gray-600">Cancelled</a>
                 </div>
@@ -125,7 +155,7 @@ $activeRental = [
                 <span class="text-xl">🏆</span>
                 <span class="md:hidden">Loyalty Rewards</span>
                 <div class="w-full bg-gray-600 rounded-full h-2 ml-2">
-                    <div class="bg-yellow-400 h-2 rounded-full" style="width: 60%;"></div>
+                    <div class="bg-yellow-400 h-2 rounded-full" style="width: <?= $loyaltyPoints ?>%;"></div>
                 </div>
             </div>
 
@@ -149,9 +179,9 @@ $activeRental = [
     <!-- Main Content -->
     <main class="ml-64 md:ml-20 transition-all duration-300">
         <!-- Sticky Active Rental Alert -->
-        <?php if (isset($activeRental)): ?>
+        <?php if ($activeRental): ?>
         <div class="bg-yellow-100 text-yellow-800 px-4 py-3 sticky top-12 z-40 flex justify-between items-center">
-            <p>You’re currently renting a <strong><?= htmlspecialchars($activeRental['car_model']) ?></strong> — Return by <strong><?= htmlspecialchars($activeRental['return_time']) ?></strong></p>
+            <p>You’re currently renting a <strong><?= htmlspecialchars($activeRental['car_model']) ?></strong> — Return by <strong><?= htmlspecialchars($activeRental['return_date']) ?></strong></p>
             <button class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Extend Rental</button>
         </div>
         <?php endif; ?>
@@ -168,19 +198,8 @@ $activeRental = [
             <!-- Upcoming Reservations -->
             <section class="bg-white shadow-md rounded-lg p-6">
                 <h2 class="text-lg font-bold text-gray-800 mb-4">Upcoming Reservations</h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <?php foreach ($upcomingReservations as $reservation): ?>
-                    <div class="border rounded-lg p-4 shadow-sm">
-                        <h3 class="text-md font-bold text-gray-800">Car: <?= htmlspecialchars($reservation['car_model']) ?></h3>
-                        <p class="text-gray-600">Pickup Date: <?= htmlspecialchars($reservation['pickup_date']) ?></p>
-                        <p class="text-gray-600">Location: <?= htmlspecialchars($reservation['pickup_location']) ?></p>
-                        <p class="text-gray-600">Status: <span class="font-bold text-<?= $reservation['status'] === 'Confirmed' ? 'green' : 'orange' ?>-600"><?= htmlspecialchars($reservation['status']) ?></span></p>
-                        <div class="mt-2 flex space-x-2">
-                            <button class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Modify</button>
-                            <button class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">Cancel</button>
-                        </div>
-                    </div>
-                    <?php endforeach; ?>
+                <div id="upcomingReservationsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Dynamic content will be loaded here -->
                 </div>
             </section>
 
@@ -188,9 +207,9 @@ $activeRental = [
             <section class="bg-white shadow-md rounded-lg p-6">
                 <h2 class="text-lg font-bold text-gray-800 mb-4">Quick Actions</h2>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <button class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Book New Rental</button>
-                    <button class="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600">Extend Current Rental</button>
-                    <button class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Contact Support</button>
+                    <button id="bookNewRentalButton" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Book New Rental</button>
+                    <button id="extendRentalButton" class="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600">Extend Current Rental</button>
+                    <button id="contactSupportButton" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Contact Support</button>
                 </div>
             </section>
 
@@ -203,6 +222,9 @@ $activeRental = [
                     <button class="tab-button">Favorites</button>
                 </div>
                 <!-- Tab Content Placeholder -->
+                <div id="recentActivityContainer" class="mt-4">
+                    <!-- Dynamic content will be loaded here -->
+                </div>
             </section>
         </main>
     </main>
@@ -246,6 +268,107 @@ $activeRental = [
 
         hamburger.addEventListener('click', () => {
             mobileMenu.classList.toggle('hidden');
+        });
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const upcomingReservationsContainer = document.getElementById('upcomingReservationsContainer');
+
+            function fetchUpcomingReservations() {
+                fetch('fetch_upcoming_reservations.php')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.error) {
+                            upcomingReservationsContainer.innerHTML = `<p class='text-red-500'>Error: ${data.error}</p>`;
+                            return;
+                        }
+
+                        if (data.length === 0) {
+                            upcomingReservationsContainer.innerHTML = '<p class="text-gray-600">No upcoming reservations found.</p>';
+                            return;
+                        }
+
+                        upcomingReservationsContainer.innerHTML = data.map(reservation => `
+                            <div class="border rounded-lg p-4 shadow-sm">
+                                <h3 class="text-md font-bold text-gray-800">Car: ${reservation.car_model}</h3>
+                                <p class="text-gray-600">Pickup Date: ${reservation.pickup_date}</p>
+                                <p class="text-gray-600">Location: ${reservation.pickup_location}</p>
+                                <p class="text-gray-600">Status: <span class="font-bold text-${reservation.booking_status === 'Confirmed' ? 'green' : 'orange'}-600">${reservation.booking_status}</span></p>
+                                <div class="mt-2 flex space-x-2">
+                                    <button class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Modify</button>
+                                    <button class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">Cancel</button>
+                                </div>
+                            </div>
+                        `).join('');
+                    })
+                    .catch(error => {
+                        upcomingReservationsContainer.innerHTML = `<p class='text-red-500'>Error fetching reservations: ${error.message}</p>`;
+                    });
+            }
+
+            // Fetch reservations on page load
+            fetchUpcomingReservations();
+        });
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const bookNewRentalButton = document.getElementById('bookNewRentalButton');
+            const extendRentalButton = document.getElementById('extendRentalButton');
+            const contactSupportButton = document.getElementById('contactSupportButton');
+
+            function fetchQuickActions() {
+                fetch('fetch_quick_actions.php')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.error) {
+                            console.error('Error fetching quick actions:', data.error);
+                            return;
+                        }
+
+                        // Update button states
+                        bookNewRentalButton.disabled = !data.canBookNewRental;
+                        extendRentalButton.disabled = !data.canExtendRental;
+                        contactSupportButton.disabled = !data.canContactSupport;
+                    })
+                    .catch(error => {
+                        console.error('Error fetching quick actions:', error);
+                    });
+            }
+
+            // Fetch quick actions on page load
+            fetchQuickActions();
+        });
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const recentActivityContainer = document.getElementById('recentActivityContainer');
+
+            function fetchRecentActivity() {
+                fetch('fetch_recent_activity.php')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.error) {
+                            recentActivityContainer.innerHTML = `<p class='text-red-500'>Error: ${data.error}</p>`;
+                            return;
+                        }
+
+                        if (data.length === 0) {
+                            recentActivityContainer.innerHTML = '<p class="text-gray-600">No recent activity found.</p>';
+                            return;
+                        }
+
+                        recentActivityContainer.innerHTML = data.map(activity => `
+                            <div class="border rounded-lg p-4 shadow-sm">
+                                <h3 class="text-md font-bold text-gray-800">${activity.activity_type}</h3>
+                                <p class="text-gray-600">Detail: ${activity.activity_detail}</p>
+                                <p class="text-gray-600">Date: ${activity.activity_date}</p>
+                            </div>
+                        `).join('');
+                    })
+                    .catch(error => {
+                        recentActivityContainer.innerHTML = `<p class='text-red-500'>Error fetching recent activity: ${error.message}</p>`;
+                    });
+            }
+
+            // Fetch recent activity on page load
+            fetchRecentActivity();
         });
     </script>
 </body>

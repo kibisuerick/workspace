@@ -80,19 +80,19 @@ checkAuth('admin');
             <section class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div class="bg-white p-4 shadow rounded cursor-pointer">
                     <h3 class="text-lg font-bold">Total Vehicles</h3>
-                    <p class="text-2xl">123</p>
+                    <p class="text-2xl" id="totalVehicles">123</p>
                     <div class="mt-2">
                         <button class="bg-blue-500 text-white px-4 py-2 rounded">Add Vehicle</button>
                     </div>
                 </div>
                 <div class="bg-white p-4 shadow rounded cursor-pointer">
                     <h3 class="text-lg font-bold">Active Users</h3>
-                    <p class="text-2xl">456</p>
+                    <p class="text-2xl" id="activeUsers">456</p>
                     <canvas id="activeUsersChart"></canvas>
                 </div>
                 <div class="bg-white p-4 shadow rounded cursor-pointer">
                     <h3 class="text-lg font-bold">Reports Generated</h3>
-                    <p class="text-2xl">789</p>
+                    <p class="text-2xl" id="reportsGenerated">789</p>
                     <div class="mt-2">
                         <button class="bg-blue-500 text-white px-4 py-2 rounded">Generate New</button>
                     </div>
@@ -101,8 +101,8 @@ checkAuth('admin');
             <section class="mt-8">
                 <h2 class="text-xl font-bold">Priority Alerts</h2>
                 <div class="mt-4">
-                    <p class="text-red-500">Overdue Vehicles: 5</p>
-                    <p class="text-yellow-400">Pending Approvals: 3</p>
+                    <p class="text-red-500" id="overdueVehicles">Overdue Vehicles: 5</p>
+                    <p class="text-yellow-400" id="pendingApprovals">Pending Approvals: 3</p>
                 </div>
             </section>
         </main>
@@ -136,6 +136,51 @@ checkAuth('admin');
                     }]
                 }
             });
+        });
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const totalVehiclesElement = document.getElementById('totalVehicles');
+            const activeUsersElement = document.getElementById('activeUsers');
+            const reportsGeneratedElement = document.getElementById('reportsGenerated');
+            const overdueVehiclesElement = document.getElementById('overdueVehicles');
+            const pendingApprovalsElement = document.getElementById('pendingApprovals');
+
+            function fetchAdminDashboardData() {
+                fetch('fetch_admin_dashboard_data.php')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.error) {
+                            console.error('Error fetching admin dashboard data:', data.error);
+                            return;
+                        }
+
+                        // Update dashboard elements
+                        totalVehiclesElement.textContent = data.totalVehicles;
+                        activeUsersElement.textContent = data.activeUsers;
+                        reportsGeneratedElement.textContent = data.reportsGenerated;
+                        overdueVehiclesElement.textContent = data.overdueVehicles;
+                        pendingApprovalsElement.textContent = data.pendingApprovals;
+
+                        // Update chart
+                        const ctx = document.getElementById('activeUsersChart').getContext('2d');
+                        new Chart(ctx, {
+                            type: 'pie',
+                            data: {
+                                labels: data.userRoles.map(role => role.role),
+                                datasets: [{
+                                    data: data.userRoles.map(role => role.count),
+                                    backgroundColor: ['#2b6cb0', '#68d391', '#f6ad55']
+                                }]
+                            }
+                        });
+                    })
+                    .catch(error => {
+                        console.error('Error fetching admin dashboard data:', error);
+                    });
+            }
+
+            // Fetch data on page load
+            fetchAdminDashboardData();
         });
     </script>
 </body>

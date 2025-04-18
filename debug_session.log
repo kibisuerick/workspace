@@ -1,0 +1,11 @@
+Array
+(
+    [csrf_token] => 0b1f55f4afc997f8b2d5eb59c03130668c84b44b7cb27fcfa57fc33f2329126a
+    [user] => Array
+        (
+            [username] =>  ERICK
+            [role] => customer
+            [full_name] => KIBISU ERICK
+        )
+
+)

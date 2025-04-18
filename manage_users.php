@@ -32,7 +32,7 @@ $users = $pdo->query("SELECT id, full_name, email, role, status, created_at FROM
     <!-- Header -->
     <header class="bg-white shadow-md py-4 px-6 flex justify-between items-center">
         <h1 class="text-xl font-bold text-gray-800">Manage Users</h1>
-        <button class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">+ Add User</button>
+        <button class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600" onclick="toggleModal('addUserModal')">+ Add User</button>
     </header>
 
     <!-- Breadcrumbs -->
@@ -47,9 +47,9 @@ $users = $pdo->query("SELECT id, full_name, email, role, status, created_at FROM
         <!-- Search and Filter -->
         <div class="bg-white shadow-md rounded-lg p-4">
             <h2 class="text-lg font-bold text-gray-800 mb-4">Search Users</h2>
-            <form class="flex space-x-4">
-                <input type="text" placeholder="Search by name or email" class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <select class="border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <form id="searchForm" class="flex space-x-4">
+                <input id="searchInput" type="text" placeholder="Search by name or email" class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <select id="roleFilter" class="border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
                     <option value="">All Roles</option>
                     <option value="admin">Admin</option>
                     <option value="employee">Employee</option>
@@ -75,7 +75,7 @@ $users = $pdo->query("SELECT id, full_name, email, role, status, created_at FROM
                             <th class="border-b py-2 px-4">Actions</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="userTableBody">
                         <?php foreach ($users as $user): ?>
                             <tr class="hover:bg-gray-50">
                                 <td class="border-b py-2 px-4">
@@ -108,7 +108,7 @@ $users = $pdo->query("SELECT id, full_name, email, role, status, created_at FROM
         </div>
 
         <!-- Pagination -->
-        <div class="flex justify-between items-center">
+        <div id="paginationContainer" class="flex justify-between items-center">
             <p>Showing 1-10 of 50</p>
             <div class="flex space-x-2">
                 <button class="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400">Previous</button>
@@ -134,6 +134,39 @@ $users = $pdo->query("SELECT id, full_name, email, role, status, created_at FROM
         </div>
     </div>
 
+    <!-- Add User Modal -->
+    <div id="addUserModal" class="hidden fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center">
+        <div class="bg-white rounded-lg shadow-lg p-6 w-11/12 md:w-1/3">
+            <h2 class="text-lg font-bold mb-4">Add New User</h2>
+            <form id="addUserForm">
+                <div class="mb-4">
+                    <label for="full_name" class="block text-sm font-medium text-gray-700">Full Name</label>
+                    <input type="text" id="full_name" name="full_name" class="mt-1 block w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div class="mb-4">
+                    <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
+                    <input type="email" id="email" name="email" class="mt-1 block w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div class="mb-4">
+                    <label for="role" class="block text-sm font-medium text-gray-700">Role</label>
+                    <select id="role" name="role" class="mt-1 block w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="admin">Admin</option>
+                        <option value="employee">Employee</option>
+                        <option value="customer">Customer</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+                    <input type="password" id="password" name="password" class="mt-1 block w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div class="flex justify-end space-x-4">
+                    <button type="button" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600" onclick="toggleModal('addUserModal')">Cancel</button>
+                    <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Add User</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
         function toggleModal(modalId) {
             const modal = document.getElementById(modalId);
@@ -144,6 +177,100 @@ $users = $pdo->query("SELECT id, full_name, email, role, status, created_at FROM
             toggleModal('deleteModal');
             // Add logic to handle deletion
         }
+    </script>
+
+    <script>
+        document.getElementById('addUserForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const formData = new FormData(this);
+
+            fetch('add_user.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert(data.error);
+                } else {
+                    alert(data.success);
+                    toggleModal('addUserModal');
+                    fetchUsers(); // Refresh the user table
+                }
+            })
+            .catch(error => {
+                console.error('Error adding user:', error);
+            });
+        });
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const userTableBody = document.getElementById('userTableBody');
+            const paginationContainer = document.getElementById('paginationContainer');
+            const searchInput = document.getElementById('searchInput');
+            const roleFilter = document.getElementById('roleFilter');
+
+            function fetchUsers(page = 1) {
+                const search = searchInput.value;
+                const role = roleFilter.value;
+
+                fetch(`fetch_users.php?search=${encodeURIComponent(search)}&role=${encodeURIComponent(role)}&page=${page}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        // Update table body
+                        userTableBody.innerHTML = data.users.map(user => `
+                            <tr class="hover:bg-gray-50">
+                                <td class="border-b py-2 px-4">
+                                    <input type="checkbox" class="mr-2">
+                                    ${user.id}
+                                </td>
+                                <td class="border-b py-2 px-4">${user.full_name}</td>
+                                <td class="border-b py-2 px-4">${user.email}</td>
+                                <td class="border-b py-2 px-4">
+                                    <span class="px-2 py-1 rounded text-white ${user.role === 'admin' ? 'bg-blue-500' : (user.role === 'employee' ? 'bg-green-500' : 'bg-yellow-500')}">
+                                        ${user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+                                    </span>
+                                </td>
+                                <td class="border-b py-2 px-4">
+                                    <span class="flex items-center">
+                                        <span class="w-2 h-2 rounded-full mr-2 ${user.status === 'active' ? 'bg-green-500' : 'bg-red-500'}"></span>
+                                        ${user.status.charAt(0).toUpperCase() + user.status.slice(1)}
+                                    </span>
+                                </td>
+                                <td class="border-b py-2 px-4">${user.created_at}</td>
+                                <td class="border-b py-2 px-4">
+                                    <button class="text-blue-500 hover:underline">✏️ Edit</button>
+                                    <button class="text-red-500 hover:underline" onclick="confirmDelete(${user.id})">🗑️ Delete</button>
+                                </td>
+                            </tr>
+                        `).join('');
+
+                        // Update pagination
+                        paginationContainer.innerHTML = '';
+                        for (let i = 1; i <= data.totalPages; i++) {
+                            const button = document.createElement('button');
+                            button.textContent = i;
+                            button.className = `px-4 py-2 rounded ${i === data.currentPage ? 'bg-blue-500 text-white' : 'bg-gray-300 text-gray-700 hover:bg-gray-400'}`;
+                            button.addEventListener('click', () => fetchUsers(i));
+                            paginationContainer.appendChild(button);
+                        }
+                    })
+                    .catch(error => console.error('Error fetching users:', error));
+            }
+
+            // Fetch users on page load
+            fetchUsers();
+
+            // Add event listeners for search and filter
+            document.getElementById('searchForm').addEventListener('submit', function (e) {
+                e.preventDefault();
+                fetchUsers();
+            });
+
+            roleFilter.addEventListener('change', function () {
+                fetchUsers();
+            });
+        });
     </script>
 </body>
 </html>

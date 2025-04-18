@@ -9,7 +9,8 @@ CREATE TABLE users (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     full_name VARCHAR(100) NOT NULL,
     email VARCHAR(100) NOT NULL UNIQUE,
-    phone VARCHAR(15) NOT NULL
+    phone VARCHAR(15) NOT NULL,
+    loyalty_points INT DEFAULT 0
 );
 
 -- Table: vehicles
