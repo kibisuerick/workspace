@@ -13,6 +13,12 @@ CREATE TABLE users (
     loyalty_points INT DEFAULT 0
 );
 
+-- Insert dummy data for users
+INSERT INTO users (username, password, role, full_name, email, phone, loyalty_points) VALUES
+('john_doe', 'password123', 'customer', 'John Doe', 'john.doe@example.com', '1234567890', 100),
+('jane_smith', 'password123', 'customer', 'Jane Smith', 'jane.smith@example.com', '0987654321', 200),
+('admin_user', 'adminpass', 'admin', 'Admin User', 'admin@example.com', '1112223333', 0);
+
 -- Table: vehicles
 CREATE TABLE vehicles (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -42,6 +48,12 @@ CREATE TABLE bookings (
     FOREIGN KEY (dropoff_location_id) REFERENCES locations(location_id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
+-- Insert dummy data for bookings
+INSERT INTO bookings (user_id, car_id, pickup_location_id, dropoff_location_id, pickup_date, return_date, booking_status, total_amount) VALUES
+(1, 1, 1, 2, '2025-04-15', '2025-04-20', 'pending', 250.00),
+(2, 2, 2, 1, '2025-04-10', '2025-04-18', 'confirmed', 480.00),
+(1, 3, 1, 1, '2025-04-12', '2025-04-15', 'cancelled', 300.00);
+
 -- Table: roles (optional for extensibility)
 CREATE TABLE roles (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -65,6 +77,12 @@ CREATE TABLE cars (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Insert dummy data for cars
+INSERT INTO cars (model, brand, year, registration_number, price_per_day, status) VALUES
+('Corolla', 'Toyota', 2020, 'ABC123', 50.00, 'available'),
+('Civic', 'Honda', 2021, 'XYZ789', 60.00, 'available'),
+('Model S', 'Tesla', 2022, 'TES123', 100.00, 'maintenance');
+
 -- Table: locations
 CREATE TABLE locations (
     location_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -72,6 +90,11 @@ CREATE TABLE locations (
     address TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Insert dummy data for locations
+INSERT INTO locations (name, address) VALUES
+('Downtown', '123 Main St'),
+('Airport', '456 Airport Rd');
 
 -- Table: payments
 CREATE TABLE payments (

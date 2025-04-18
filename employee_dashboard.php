@@ -12,6 +12,39 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'employee') {
 $fullName = $_SESSION['user']['full_name'];
 
 checkAuth('employee');
+
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['search'])) {
+    $searchQuery = trim($_GET['search']);
+
+    if (!empty($searchQuery)) {
+        try {
+            $stmt = $pdo->prepare("SELECT full_name, email, phone FROM users WHERE role = 'customer' AND (full_name LIKE :query OR email LIKE :query OR phone LIKE :query)");
+            $stmt->execute(['query' => "%$searchQuery%"]);
+            $searchResults = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            die("Error executing search: " . $e->getMessage());
+        }
+    } else {
+        $searchResults = [];
+    }
+}
+
+// Fetch backend data for dashboard sections
+try {
+    // Total Bookings
+    $stmt = $pdo->query("SELECT COUNT(*) FROM bookings");
+    $totalBookings = $stmt->fetchColumn();
+
+    // Available Cars
+    $stmt = $pdo->query("SELECT COUNT(*) FROM cars WHERE status = 'available'");
+    $availableCars = $stmt->fetchColumn();
+
+    // Pending Returns
+    $stmt = $pdo->query("SELECT COUNT(*) FROM bookings WHERE booking_status = 'pending'");
+    $pendingReturns = $stmt->fetchColumn();
+} catch (PDOException $e) {
+    die("Error fetching dashboard data: " . $e->getMessage());
+}
 ?>
 
 <!DOCTYPE html>
@@ -52,32 +85,44 @@ checkAuth('employee');
         <!-- Navbar -->
         <header class="bg-white shadow-md py-4 px-6 flex justify-between items-center">
             <h1 class="text-xl font-bold text-gray-800">Welcome, <?= htmlspecialchars($fullName) ?></h1>
-            <div class="flex items-center space-x-4">
-                <input type="text" placeholder="Search..." class="border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <div class="relative">
-                    <button class="flex items-center space-x-2 focus:outline-none" onclick="toggleModal('editProfileModal')">
-                        <img src="https://via.placeholder.com/40" alt="Profile" class="w-10 h-10 rounded-full">
-                        <span class="hidden md:block">Profile</span>
-                    </button>
-                </div>
-            </div>
         </header>
 
         <!-- Content Area -->
         <main class="p-6 space-y-6">
+            <!-- Search Bar -->
+            <form method="GET" action="employee_dashboard.php" class="flex items-center">
+                <input type="text" name="search" placeholder="Search customers..." class="border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <button type="submit" class="ml-2 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">Search</button>
+            </form>
+
+            <?php if (isset($searchResults)): ?>
+                <div class="mt-4">
+                    <h2 class="text-lg font-bold">Search Results:</h2>
+                    <?php if (count($searchResults) > 0): ?>
+                        <ul class="list-disc pl-5">
+                            <?php foreach ($searchResults as $result): ?>
+                                <li><?= htmlspecialchars($result['full_name']) ?> (<?= htmlspecialchars($result['email']) ?>, <?= htmlspecialchars($result['phone']) ?>)</li>
+                            <?php endforeach; ?>
+                        </ul>
+                    <?php else: ?>
+                        <p>No customers found.</p>
+                    <?php endif; ?>
+                </div>
+            <?php endif; ?>
+
             <!-- Summary Panel -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div class="bg-white shadow-md rounded-lg p-4">
                     <h2 class="text-lg font-bold text-gray-800">Total Bookings</h2>
-                    <p class="text-2xl font-bold text-blue-500">120</p>
+                    <p class="text-2xl font-bold text-blue-500"><?= $totalBookings ?></p>
                 </div>
                 <div class="bg-white shadow-md rounded-lg p-4">
                     <h2 class="text-lg font-bold text-gray-800">Available Cars</h2>
-                    <p class="text-2xl font-bold text-green-500">45</p>
+                    <p class="text-2xl font-bold text-green-500"><?= $availableCars ?></p>
                 </div>
                 <div class="bg-white shadow-md rounded-lg p-4">
                     <h2 class="text-lg font-bold text-gray-800">Pending Returns</h2>
-                    <p class="text-2xl font-bold text-red-500">8</p>
+                    <p class="text-2xl font-bold text-red-500"><?= $pendingReturns ?></p>
                 </div>
             </div>
 
