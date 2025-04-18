@@ -93,3 +93,20 @@ CREATE TABLE reports (
     report_data TEXT NOT NULL,
     FOREIGN KEY (generated_by) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
+
+-- Table: employees
+CREATE TABLE employees (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) NOT NULL UNIQUE,
+    phone VARCHAR(15),
+    position VARCHAR(50),
+    hire_date DATE,
+    salary DECIMAL(10, 2),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Insert sample employees
+INSERT INTO employees (name, email, phone, position, hire_date, salary) VALUES
+('John Doe', 'john.doe@example.com', '1234567890', 'Manager', '2023-01-15', 60000.00),
+('Jane Smith', 'jane.smith@example.com', '0987654321', 'Assistant', '2024-03-10', 40000.00);

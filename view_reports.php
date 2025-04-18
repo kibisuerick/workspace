@@ -4,8 +4,26 @@ require 'includes/auth.php';
 
 checkAuth('admin');
 
-// Fetch reports data
-$reports = $pdo->query("SELECT * FROM reports ORDER BY created_at DESC")->fetchAll(PDO::FETCH_ASSOC);
+// Add pagination and error handling
+$reportsPerPage = 10;
+$page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
+$offset = ($page - 1) * $reportsPerPage;
+
+try {
+    // Fetch total reports count
+    $totalReports = $pdo->query("SELECT COUNT(*) FROM reports")->fetchColumn();
+
+    // Fetch paginated reports
+    $stmt = $pdo->prepare("SELECT * FROM reports ORDER BY created_at DESC LIMIT :limit OFFSET :offset");
+    $stmt->bindValue(':limit', $reportsPerPage, PDO::PARAM_INT);
+    $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+    $stmt->execute();
+    $reports = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    $totalPages = ceil($totalReports / $reportsPerPage);
+} catch (PDOException $e) {
+    die("Error fetching reports: " . $e->getMessage());
+}
 ?>
 
 <!DOCTYPE html>
@@ -64,6 +82,23 @@ $reports = $pdo->query("SELECT * FROM reports ORDER BY created_at DESC")->fetchA
                     <?php endif; ?>
                 </tbody>
             </table>
+        </div>
+
+        <!-- Pagination controls -->
+        <div class="pagination" style="text-align: center; margin-top: 20px;">
+            <?php if ($page > 1): ?>
+                <a href="?page=<?= $page - 1 ?>" style="margin-right: 10px; text-decoration: none; color: #007bff;">&laquo; Previous</a>
+            <?php endif; ?>
+
+            <?php for ($i = 1; $i <= $totalPages; $i++): ?>
+                <a href="?page=<?= $i ?>" style="margin: 0 5px; text-decoration: none; <?= $i === $page ? 'font-weight: bold; color: #333;' : 'color: #007bff;' ?>">
+                    <?= $i ?>
+                </a>
+            <?php endfor; ?>
+
+            <?php if ($page < $totalPages): ?>
+                <a href="?page=<?= $page + 1 ?>" style="margin-left: 10px; text-decoration: none; color: #007bff;">Next &raquo;</a>
+            <?php endif; ?>
         </div>
     </main>
 </body>
