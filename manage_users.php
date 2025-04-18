@@ -180,30 +180,6 @@ $users = $pdo->query("SELECT id, full_name, email, role, status, created_at FROM
     </script>
 
     <script>
-        document.getElementById('addUserForm').addEventListener('submit', function (e) {
-            e.preventDefault();
-
-            const formData = new FormData(this);
-
-            fetch('add_user.php', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.error) {
-                    alert(data.error);
-                } else {
-                    alert(data.success);
-                    toggleModal('addUserModal');
-                    fetchUsers(); // Refresh the user table
-                }
-            })
-            .catch(error => {
-                console.error('Error adding user:', error);
-            });
-        });
-
         document.addEventListener('DOMContentLoaded', function () {
             const userTableBody = document.getElementById('userTableBody');
             const paginationContainer = document.getElementById('paginationContainer');
