@@ -37,6 +37,7 @@ CREATE TABLE bookings (
     car_id INT NOT NULL,
     pickup_location_id INT NOT NULL,
     dropoff_location_id INT NOT NULL,
+    branch_id INT,
     pickup_date DATE NOT NULL,
     return_date DATE NOT NULL,
     booking_status ENUM('pending', 'confirmed', 'cancelled') DEFAULT 'pending',
@@ -45,7 +46,8 @@ CREATE TABLE bookings (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (car_id) REFERENCES cars(car_id) ON DELETE CASCADE,
     FOREIGN KEY (pickup_location_id) REFERENCES locations(location_id) ON DELETE CASCADE,
-    FOREIGN KEY (dropoff_location_id) REFERENCES locations(location_id) ON DELETE CASCADE
+    FOREIGN KEY (dropoff_location_id) REFERENCES locations(location_id) ON DELETE CASCADE,
+    FOREIGN KEY (branch_id) REFERENCES branches(branch_id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
 -- Insert dummy data for bookings
@@ -53,6 +55,10 @@ INSERT INTO bookings (user_id, car_id, pickup_location_id, dropoff_location_id, 
 (1, 1, 1, 2, '2025-04-15', '2025-04-20', 'pending', 250.00),
 (2, 2, 2, 1, '2025-04-10', '2025-04-18', 'confirmed', 480.00),
 (1, 3, 1, 1, '2025-04-12', '2025-04-15', 'cancelled', 300.00);
+
+-- Update existing bookings to associate with branches
+UPDATE bookings SET branch_id = 1 WHERE pickup_location_id = 1;
+UPDATE bookings SET branch_id = 2 WHERE pickup_location_id = 2;
 
 -- Table: roles (optional for extensibility)
 CREATE TABLE roles (
@@ -95,6 +101,19 @@ CREATE TABLE locations (
 INSERT INTO locations (name, address) VALUES
 ('Downtown', '123 Main St'),
 ('Airport', '456 Airport Rd');
+
+-- Table: branches
+CREATE TABLE branches (
+    branch_id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    address TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Insert sample data into branches table
+INSERT INTO branches (name, address) VALUES
+('Downtown Branch', '123 Main St'),
+('Airport Branch', '456 Airport Rd');
 
 -- Table: payments
 CREATE TABLE payments (
