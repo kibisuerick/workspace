@@ -237,9 +237,8 @@ $users = $pdo->query("SELECT id, full_name, email, role, status, created_at FROM
             // Fetch users on page load
             fetchUsers();
 
-            // Add event listeners for search and filter
-            document.getElementById('searchForm').addEventListener('submit', function (e) {
-                e.preventDefault();
+            // Add event listeners for live search and filter
+            searchInput.addEventListener('input', function () {
                 fetchUsers();
             });
 
