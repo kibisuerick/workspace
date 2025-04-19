@@ -9,3 +9,15 @@ Array
         )
 
 )
+Provided Password: @Kibisu2234
+Hashed Password: $2y$10$g3NA25T4FsFXfDBkvC2oY.Q6rd7.DpZjx7CJqSstQshZKN31QTw2K
+Provided Password: @Kibisu2234
+Hashed Password: $2y$10$g3NA25T4FsFXfDBkvC2oY.Q6rd7.DpZjx7CJqSstQshZKN31QTw2K
+[DEBUG] Provided Password: @Kibisu2234
+[DEBUG] Hashed Password from DB: $2y$10$g3NA25T4FsFXfDBkvC2oY.Q6rd7.DpZjx7CJqSstQshZKN31QTw2K
+[DEBUG] Password verification failed.
+[DEBUG] Provided Password: @Kibisu2234
+[DEBUG] Hashed Password from DB: $2y$10$g3NA25T4FsFXfDBkvC2oY.Q6rd7.DpZjx7CJqSstQshZKN31QTw2K
+[DEBUG] Rehashed Password for Comparison: $2y$10$TjbS0In3ya7lyTnh66PcJ.KqmTnip5uQhEE1UVdWhgojOQl0B2jcq
+[DEBUG] Rehashed password does NOT match the stored hash.
+[DEBUG] Password verification failed.

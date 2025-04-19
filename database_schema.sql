@@ -142,13 +142,25 @@ CREATE TABLE employees (
     name VARCHAR(100) NOT NULL,
     email VARCHAR(100) NOT NULL UNIQUE,
     phone VARCHAR(15),
+    address TEXT,
     position VARCHAR(50),
     hire_date DATE,
     salary DECIMAL(10, 2),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    profile_picture VARCHAR(255) DEFAULT 'https://via.placeholder.com/150'
 );
 
 -- Insert sample employees
 INSERT INTO employees (name, email, phone, position, hire_date, salary) VALUES
 ('John Doe', 'john.doe@example.com', '1234567890', 'Manager', '2023-01-15', 60000.00),
 ('Jane Smith', 'jane.smith@example.com', '0987654321', 'Assistant', '2024-03-10', 40000.00);
+
+-- Table: recent_activity
+CREATE TABLE recent_activity (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    employee_id INT NOT NULL,
+    action VARCHAR(255) NOT NULL,
+    details TEXT,
+    activity_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE
+);
